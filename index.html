@@ -123,73 +123,86 @@
   <button class="reset" onclick="resetCalc()">RESET</button>
 
   <script>
-    let total = 0;
-    let current = 0;
-    let history = [];
+  let total = 0;
+  let current = 0;
+  let currentStack = []; // simpan pecahan yang ditekan sebelum commit
+  let history = [];
 
-    const totalEl = document.getElementById("total");
-    const currentEl = document.getElementById("current");
-    const historyEl = document.getElementById("history");
+  const totalEl = document.getElementById("total");
+  const currentEl = document.getElementById("current");
+  const historyEl = document.getElementById("history");
 
-    function saveState() {
-      localStorage.setItem("calcTotal", total);
-      localStorage.setItem("calcCurrent", current);
-      localStorage.setItem("calcHistory", JSON.stringify(history));
-    }
+  function saveState() {
+    localStorage.setItem("calcTotal", total);
+    localStorage.setItem("calcCurrent", current);
+    localStorage.setItem("calcStack", JSON.stringify(currentStack));
+    localStorage.setItem("calcHistory", JSON.stringify(history));
+  }
 
-    function loadState() {
-      total = parseInt(localStorage.getItem("calcTotal")) || 0;
-      current = parseInt(localStorage.getItem("calcCurrent")) || 0;
-      history = JSON.parse(localStorage.getItem("calcHistory")) || [];
-      updateDisplay();
-    }
+  function loadState() {
+    total = parseInt(localStorage.getItem("calcTotal")) || 0;
+    current = parseInt(localStorage.getItem("calcCurrent")) || 0;
+    currentStack = JSON.parse(localStorage.getItem("calcStack")) || [];
+    history = JSON.parse(localStorage.getItem("calcHistory")) || [];
+    updateDisplay();
+  }
 
-    function updateDisplay() {
-      totalEl.textContent = total.toLocaleString("id-ID");
-      currentEl.textContent = current.toLocaleString("id-ID");
-      historyEl.innerHTML = history.map(h => `<div>${h}</div>`).join("");
-      saveState();
-    }
+  function updateDisplay() {
+    totalEl.textContent = total.toLocaleString("id-ID");
+    currentEl.textContent = current.toLocaleString("id-ID");
+    historyEl.innerHTML = history
+      .map(h => `<div>${h.op} ${h.val.toLocaleString("id-ID")}</div>`)
+      .join("");
+    saveState();
+  }
 
-    function addValue(val) {
-      current += val;
-      updateDisplay();
-    }
+  function addValue(val) {
+    current += val;
+    currentStack.push(val); // simpan pecahan yang baru ditekan
+    updateDisplay();
+  }
 
-    function setAdd() {
+  function setAdd() {
+    if (current > 0) {
       total += current;
-      if (current > 0) history.push(`+ ${current.toLocaleString("id-ID")}`);
+      history.push({ op: "+", val: current });
       current = 0;
+      currentStack = []; // clear stack
       updateDisplay();
     }
+  }
 
-    function setSubtract() {
+  function setSubtract() {
+    if (current > 0) {
       total -= current;
-      if (current > 0) history.push(`- ${current.toLocaleString("id-ID")}`);
+      history.push({ op: "-", val: current });
       current = 0;
+      currentStack = []; // clear stack
       updateDisplay();
     }
+  }
 
-    function undo() {
-      if (current > 0) {
-        current = 0;
-      } else if (history.length > 0) {
-        let last = history.pop();
-        let num = parseInt(last.replace(/[^0-9]/g, ""));
-        if (last.includes("+")) total -= num;
-        else total += num;
-      }
-      updateDisplay();
+  function undo() {
+    if (currentStack.length > 0) {
+      // undo pecahan terakhir sebelum commit
+      let lastVal = currentStack.pop();
+      current -= lastVal;
+    } else if (history.length > 0) {
+      // undo transaksi terakhir di history
+      let last = history.pop();
+      if (last.op === "+") total -= last.val;
+      if (last.op === "-") total += last.val;
     }
+    updateDisplay();
+  }
 
-    function resetCalc() {
-      total = 0;
-      current = 0;
-      history = [];
-      updateDisplay();
-    }
+  function resetCalc() {
+    total = 0;
+    current = 0;
+    currentStack = [];
+    history = [];
+    updateDisplay();
+  }
 
-    loadState();
-  </script>
-</body>
-</html>
+  loadState();
+</script>
