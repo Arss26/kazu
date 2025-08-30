@@ -66,20 +66,21 @@
   <h2>💸 Kalkulator Uang</h2>
   <div id="display">0</div>
   <div id="subtotalDisplay">0</div>
-  <div class="buttons">
-    <button onclick="addValue(100000)">100k</button>
-    <button onclick="addValue(50000)">50k</button>
-    <button onclick="addValue(20000)">20k</button>
-    <button onclick="addValue(10000)">10k</button>
-    <button onclick="addValue(2000)">2k</button>
-    <button onclick="addValue(1000)">1k</button>
-    <button onclick="addValue(500)">500</button>
-    <button onclick="addValue(100)">100</button>
-    <button onclick="undo()">Undo</button>
-    <button onclick="setOperator('+')">+</button>
-    <button onclick="setOperator('-')">-</button>
-  </div>
-  <div class="history" id="history"></div>
+  <div class="grid grid-cols-3 gap-3 mt-4">
+  <button onclick="addValue(100000)">100k</button>
+  <button onclick="addValue(50000)">50k</button>
+  <button onclick="addValue(20000)">20k</button>
+  <button onclick="addValue(10000)">10k</button>
+  <button onclick="addValue(2000)">2k</button>
+  <button onclick="addValue(1000)">1k</button>
+  <button onclick="addValue(500)">500</button>
+  <button onclick="addValue(100)">100</button>
+  <button onclick="undo()">Undo</button>
+  <button onclick="setOperation('+')">+</button>
+  <button onclick="setOperation('-')">-</button>
+  <!-- Tambahkan tombol Reset -->
+  <button onclick="resetCalc()" style="background:red; color:white;">Reset</button>
+</div>
 
   <script>
     let total = parseInt(localStorage.getItem("total")) || 0;
