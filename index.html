@@ -2,126 +2,174 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Kalkulator Uang Neon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#121212">
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("sw.js");
-      });
-    }
-  </script>
+  <title>Kalkulator Uang</title>
   <style>
     body {
+      background: #111;
+      color: #0ff;
       font-family: Arial, sans-serif;
-      background:#121212;
-      color:#0ff;
-      text-align:center;
-      padding:20px;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
     }
-    #display, #subtotalDisplay {
-      font-size:2em;
-      margin:10px auto;
-      padding:10px;
-      background:#1e1e1e;
-      border-radius:10px;
-      width:90%;
-      max-width:400px;
+
+    h1 {
+      margin-bottom: 20px;
     }
-    .buttons {
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      max-width:400px;
-      margin:20px auto;
+
+    #total {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #222;
     }
+
+    #current {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 10px;
+      background: #222;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+
     button {
-      padding:20px;
-      font-size:1.2em;
-      border:none;
-      border-radius:15px;
-      background:#0ff;
-      color:#121212;
-      font-weight:bold;
-      box-shadow:0 0 10px #0ff,0 0 20px #0ff;
+      padding: 20px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 12px;
+      background: #00faff;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 15px #00faff;
+      transition: 0.2s;
     }
-    button:active {
-      background:#08f;
-      color:#fff;
+
+    button:hover {
+      background: #00ffff;
+      transform: scale(1.05);
     }
-    .history {
-      margin-top:20px;
-      max-width:400px;
-      margin:auto;
-      text-align:left;
-      background:#1e1e1e;
-      padding:10px;
-      border-radius:10px;
+
+    .col-span-2 {
+      grid-column: span 2;
+    }
+
+    #history {
+      margin-top: 20px;
+      text-align: left;
+      background: #222;
+      padding: 10px;
+      border-radius: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+      font-size: 1em;
     }
   </style>
 </head>
 <body>
-  <h2>💸 Kalkulator Uang</h2>
-  <div id="display">0</div>
-  <div id="subtotalDisplay">0</div>
-  <div class="grid grid-cols-3 gap-3 mt-4">
-  <button onclick="addValue(100000)">100k</button>
-  <button onclick="addValue(50000)">50k</button>
-  <button onclick="addValue(20000)">20k</button>
-  <button onclick="addValue(10000)">10k</button>
-  <button onclick="addValue(2000)">2k</button>
-  <button onclick="addValue(1000)">1k</button>
-  <button onclick="addValue(500)">500</button>
-  <button onclick="addValue(100)">100</button>
-  <button onclick="undo()">Undo</button>
-  <button onclick="setOperation('+')">+</button>
-  <button onclick="setOperation('-')">-</button>
-  <!-- Tambahkan tombol Reset -->
-  <button onclick="resetCalc()" style="background:red; color:white;">Reset</button>
-</div>
+  <h1>💸 Kalkulator Uang</h1>
+  <div id="total">0</div>
+  <div id="current">0</div>
+
+  <div class="grid">
+    <!-- Baris 1 -->
+    <button onclick="addValue(100000)">100k</button>
+    <button onclick="addValue(50000)">50k</button>
+    <button onclick="addValue(20000)">20k</button>
+    <button onclick="undo()">⟲</button>
+
+    <!-- Baris 2 -->
+    <button onclick="addValue(10000)">10k</button>
+    <button onclick="addValue(2000)">2k</button>
+    <button onclick="addValue(1000)">1k</button>
+    <button onclick="subtractMode()">-</button>
+
+    <!-- Baris 3 -->
+    <button onclick="addValue(500)">500</button>
+    <button onclick="addValue(100)">100</button>
+    <button class="col-span-2" onclick="resetCalc()">Reset</button>
+
+    <!-- Baris 4 -->
+    <button class="col-span-2" onclick="saveData()">💾 Save</button>
+    <button class="col-span-2" onclick="loadData()">📂 Load</button>
+  </div>
+
+  <div id="history"></div>
 
   <script>
-    let total = parseInt(localStorage.getItem("total")) || 0;
+    let total = 0;
     let current = 0;
-    let operator = null;
-    let history = JSON.parse(localStorage.getItem("history")) || [];
+    let history = [];
+    let isSubtract = false;
 
-    const display = document.getElementById("display");
-    const subtotalDisplay = document.getElementById("subtotalDisplay");
-    const historyDiv = document.getElementById("history");
+    const totalEl = document.getElementById("total");
+    const currentEl = document.getElementById("current");
+    const historyEl = document.getElementById("history");
 
     function updateDisplay() {
-      display.textContent = total.toLocaleString("id-ID");
-      subtotalDisplay.textContent = current.toLocaleString("id-ID");
-      historyDiv.innerHTML = history.map(h => `<div>${h}</div>`).join("");
-      localStorage.setItem("total", total);
-      localStorage.setItem("history", JSON.stringify(history));
+      totalEl.textContent = total.toLocaleString("id-ID");
+      currentEl.textContent = current.toLocaleString("id-ID");
+      historyEl.innerHTML = history.map(h => `<div>${h}</div>`).join("");
     }
 
     function addValue(val) {
-      current += val;
+      if (isSubtract) {
+        total -= val;
+        history.push(`- ${val.toLocaleString("id-ID")}`);
+        isSubtract = false;
+      } else {
+        total += val;
+        history.push(`+ ${val.toLocaleString("id-ID")}`);
+      }
+      current = val;
       updateDisplay();
     }
 
-    function setOperator(op) {
-      if (operator && current !== 0) {
-        if (operator === "+") total += current;
-        if (operator === "-") total -= current;
-        history.push(operator + " " + current.toLocaleString("id-ID"));
-      } else if (!operator && current !== 0) {
-        total += current;
-        history.push("+ " + current.toLocaleString("id-ID"));
-      }
-      operator = op;
+    function subtractMode() {
+      isSubtract = true;
       current = 0;
       updateDisplay();
     }
 
     function undo() {
+      let last = history.pop();
+      if (last) {
+        let num = parseInt(last.replace(/[^0-9]/g, ""));
+        if (last.includes("+")) total -= num;
+        else total += num;
+      }
       current = 0;
       updateDisplay();
+    }
+
+    function resetCalc() {
+      total = 0;
+      current = 0;
+      history = [];
+      updateDisplay();
+    }
+
+    function saveData() {
+      localStorage.setItem("calcTotal", total);
+      localStorage.setItem("calcHistory", JSON.stringify(history));
+      alert("✅ Data disimpan!");
+    }
+
+    function loadData() {
+      total = parseInt(localStorage.getItem("calcTotal")) || 0;
+      history = JSON.parse(localStorage.getItem("calcHistory")) || [];
+      current = 0;
+      updateDisplay();
+      alert("📂 Data dimuat!");
     }
 
     updateDisplay();
