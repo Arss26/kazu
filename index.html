@@ -14,10 +14,6 @@
       padding: 20px;
     }
 
-    h1 {
-      margin-bottom: 20px;
-    }
-
     #total {
       font-size: 2.5em;
       margin-bottom: 10px;
@@ -31,7 +27,8 @@
       margin-bottom: 20px;
       padding: 10px;
       border-radius: 10px;
-      background: #222;
+      background: #333;
+      color: #0ff;
     }
 
     .grid {
@@ -59,8 +56,23 @@
       transform: scale(1.05);
     }
 
-    .col-span-2 {
-      grid-column: span 2;
+    .reset {
+      background: #ff0044;
+      color: white;
+      box-shadow: 0 0 15px #ff0044;
+      padding: 20px;
+      width: 100%;
+      margin-top: 20px;
+      border-radius: 12px;
+      font-size: 1.2em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .reset:hover {
+      background: #ff335f;
+      transform: scale(1.05);
     }
 
     #history {
@@ -76,7 +88,7 @@
   </style>
 </head>
 <body>
-  <h1>💸 Kalkulator Uang</h1>
+  <h1>💸 ANVAR 🇮🇩</h1>
   <div id="total">0</div>
   <div id="current">0</div>
 
@@ -85,69 +97,88 @@
     <button onclick="addValue(100000)">100k</button>
     <button onclick="addValue(50000)">50k</button>
     <button onclick="addValue(20000)">20k</button>
-    <button onclick="undo()">⟲</button>
 
     <!-- Baris 2 -->
     <button onclick="addValue(10000)">10k</button>
+    <button onclick="addValue(5000)">5k</button>
     <button onclick="addValue(2000)">2k</button>
-    <button onclick="addValue(1000)">1k</button>
-    <button onclick="subtractMode()">-</button>
-
+    
     <!-- Baris 3 -->
+    <button onclick="addValue(1000)">1k</button>
     <button onclick="addValue(500)">500</button>
     <button onclick="addValue(100)">100</button>
-    <button class="col-span-2" onclick="resetCalc()">Reset</button>
-
+   
+    
     <!-- Baris 4 -->
-    <button class="col-span-2" onclick="saveData()">💾 Save</button>
-    <button class="col-span-2" onclick="loadData()">📂 Load</button>
+    <button onclick="undo()">⟲</button>
+    <button onclick="setSubtract()">-</button>
+    <button onclick="setAdd()">+</button>
+    
+    
   </div>
 
   <div id="history"></div>
+
+  <!-- Tombol Reset dipindah ke bawah history -->
+  <button class="reset" onclick="resetCalc()">RESET</button>
 
   <script>
     let total = 0;
     let current = 0;
     let history = [];
-    let isSubtract = false;
 
     const totalEl = document.getElementById("total");
     const currentEl = document.getElementById("current");
     const historyEl = document.getElementById("history");
 
+    function saveState() {
+      localStorage.setItem("calcTotal", total);
+      localStorage.setItem("calcCurrent", current);
+      localStorage.setItem("calcHistory", JSON.stringify(history));
+    }
+
+    function loadState() {
+      total = parseInt(localStorage.getItem("calcTotal")) || 0;
+      current = parseInt(localStorage.getItem("calcCurrent")) || 0;
+      history = JSON.parse(localStorage.getItem("calcHistory")) || [];
+      updateDisplay();
+    }
+
     function updateDisplay() {
       totalEl.textContent = total.toLocaleString("id-ID");
       currentEl.textContent = current.toLocaleString("id-ID");
       historyEl.innerHTML = history.map(h => `<div>${h}</div>`).join("");
+      saveState();
     }
 
     function addValue(val) {
-      if (isSubtract) {
-        total -= val;
-        history.push(`- ${val.toLocaleString("id-ID")}`);
-        isSubtract = false;
-      } else {
-        total += val;
-        history.push(`+ ${val.toLocaleString("id-ID")}`);
-      }
-      current = val;
+      current += val;
       updateDisplay();
     }
 
-    function subtractMode() {
-      isSubtract = true;
+    function setAdd() {
+      total += current;
+      if (current > 0) history.push(`+ ${current.toLocaleString("id-ID")}`);
+      current = 0;
+      updateDisplay();
+    }
+
+    function setSubtract() {
+      total -= current;
+      if (current > 0) history.push(`- ${current.toLocaleString("id-ID")}`);
       current = 0;
       updateDisplay();
     }
 
     function undo() {
-      let last = history.pop();
-      if (last) {
+      if (current > 0) {
+        current = 0;
+      } else if (history.length > 0) {
+        let last = history.pop();
         let num = parseInt(last.replace(/[^0-9]/g, ""));
         if (last.includes("+")) total -= num;
         else total += num;
       }
-      current = 0;
       updateDisplay();
     }
 
@@ -158,21 +189,7 @@
       updateDisplay();
     }
 
-    function saveData() {
-      localStorage.setItem("calcTotal", total);
-      localStorage.setItem("calcHistory", JSON.stringify(history));
-      alert("✅ Data disimpan!");
-    }
-
-    function loadData() {
-      total = parseInt(localStorage.getItem("calcTotal")) || 0;
-      history = JSON.parse(localStorage.getItem("calcHistory")) || [];
-      current = 0;
-      updateDisplay();
-      alert("📂 Data dimuat!");
-    }
-
-    updateDisplay();
+    loadState();
   </script>
 </body>
 </html>
