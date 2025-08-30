@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Kalkulator Uang Neon</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121212">
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js");
+      });
+    }
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background:#121212;
+      color:#0ff;
+      text-align:center;
+      padding:20px;
+    }
+    #display, #subtotalDisplay {
+      font-size:2em;
+      margin:10px auto;
+      padding:10px;
+      background:#1e1e1e;
+      border-radius:10px;
+      width:90%;
+      max-width:400px;
+    }
+    .buttons {
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      max-width:400px;
+      margin:20px auto;
+    }
+    button {
+      padding:20px;
+      font-size:1.2em;
+      border:none;
+      border-radius:15px;
+      background:#0ff;
+      color:#121212;
+      font-weight:bold;
+      box-shadow:0 0 10px #0ff,0 0 20px #0ff;
+    }
+    button:active {
+      background:#08f;
+      color:#fff;
+    }
+    .history {
+      margin-top:20px;
+      max-width:400px;
+      margin:auto;
+      text-align:left;
+      background:#1e1e1e;
+      padding:10px;
+      border-radius:10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>💸 Kalkulator Uang</h2>
+  <div id="display">0</div>
+  <div id="subtotalDisplay">0</div>
+  <div class="buttons">
+    <button onclick="addValue(100000)">100k</button>
+    <button onclick="addValue(50000)">50k</button>
+    <button onclick="addValue(20000)">20k</button>
+    <button onclick="addValue(10000)">10k</button>
+    <button onclick="addValue(2000)">2k</button>
+    <button onclick="addValue(1000)">1k</button>
+    <button onclick="addValue(500)">500</button>
+    <button onclick="addValue(100)">100</button>
+    <button onclick="undo()">Undo</button>
+    <button onclick="setOperator('+')">+</button>
+    <button onclick="setOperator('-')">-</button>
+  </div>
+  <div class="history" id="history"></div>
+
+  <script>
+    let total = parseInt(localStorage.getItem("total")) || 0;
+    let current = 0;
+    let operator = null;
+    let history = JSON.parse(localStorage.getItem("history")) || [];
+
+    const display = document.getElementById("display");
+    const subtotalDisplay = document.getElementById("subtotalDisplay");
+    const historyDiv = document.getElementById("history");
+
+    function updateDisplay() {
+      display.textContent = total.toLocaleString("id-ID");
+      subtotalDisplay.textContent = current.toLocaleString("id-ID");
+      historyDiv.innerHTML = history.map(h => `<div>${h}</div>`).join("");
+      localStorage.setItem("total", total);
+      localStorage.setItem("history", JSON.stringify(history));
+    }
+
+    function addValue(val) {
+      current += val;
+      updateDisplay();
+    }
+
+    function setOperator(op) {
+      if (operator && current !== 0) {
+        if (operator === "+") total += current;
+        if (operator === "-") total -= current;
+        history.push(operator + " " + current.toLocaleString("id-ID"));
+      } else if (!operator && current !== 0) {
+        total += current;
+        history.push("+ " + current.toLocaleString("id-ID"));
+      }
+      operator = op;
+      current = 0;
+      updateDisplay();
+    }
+
+    function undo() {
+      current = 0;
+      updateDisplay();
+    }
+
+    updateDisplay();
+  </script>
+</body>
+</html>
