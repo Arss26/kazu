@@ -24,3 +24,13 @@ function resetCalc() {
     history = [];
     updateDisplay();
 }
+function updateDisplay() {
+  totalEl.textContent = total.toLocaleString("id-ID");
+  currentEl.textContent = current.toLocaleString("id-ID");
+  historyEl.innerHTML = history
+    .map((h, i) => `<div>${i + 1}. ${h.op} ${h.val.toLocaleString("id-ID")}</div>`)
+    .join("");
+  saveState();
+    })
+  );
+});
