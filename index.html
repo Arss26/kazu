@@ -30,18 +30,6 @@
       color: #0ff;
       margin-top: 5px;
     }
-    .history {
-      width: 100%;
-      max-width: 400px;
-      background: #111;
-      min-height: 80px;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 14px;
-      overflow-y: auto;
-      box-shadow: 0 0 10px #555;
-    }
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -84,13 +72,26 @@
       border-radius: 12px;
       box-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000;
     }
+    .history {
+      width: 100%;
+      max-width: 400px;
+      background: #111;
+      min-height: 80px;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      overflow-y: auto;
+      box-shadow: 0 0 10px #555;
+    }
+    .plus { color: #00ff88; }
+    .minus { color: #ff4444; }
   </style>
 </head>
 <body>
-  <h1>💸 ANVAR 🇮🇩</h1>
+<h1>💸 ANVAR 🇮🇩</h1>
   <div class="display" id="total">0</div>
   <div class="display sub-display" id="current">0</div>
-
 
   <div class="buttons">
     <button onclick="addValue(100000)">100k</button>
@@ -101,34 +102,38 @@
     <button onclick="addValue(10000)">10k</button>
     <button onclick="addValue(5000)">5k</button>
     <button onclick="addValue(2000)">2k</button>
-    <button onclick="setAdd()" class="btn-plus">+</button>
+    <button onclick="setMinus()" class="btn-minus">-</button>
 
     <button onclick="addValue(1000)">1k</button>
     <button onclick="addValue(500)">500</button>
     <button onclick="addValue(100)">100</button>
-    <button onclick="setMinus()" class="btn-minus">-</button>
+    <button onclick="setAdd()" class="btn-plus">+</button>
   </div>
+
   <div class="history" id="history"></div>
   <button class="btn-reset" onclick="resetCalc()">Reset</button>
-  </div>
 
   <script>
     let total = 0;
     let current = 0;
     let currentStack = [];
     let history = [];
+    let currentOp = ""; // operasi aktif
 
     const totalEl = document.getElementById("total");
     const currentEl = document.getElementById("current");
     const historyEl = document.getElementById("history");
 
     function updateDisplay() {
+      let opSymbol = currentOp ? `<span class="${currentOp === '+' ? 'plus' : 'minus'}">${currentOp}</span> ` : "";
       totalEl.textContent = total.toLocaleString("id-ID");
-      currentEl.textContent = current.toLocaleString("id-ID");
+      currentEl.innerHTML = opSymbol + current.toLocaleString("id-ID");
       historyEl.innerHTML = history
-        .map((h, i) => `<div>${i + 1}. ${h.op} ${h.val.toLocaleString("id-ID")}</div>`)
+        .map((h, i) => 
+          `<div>${i + 1}. <span class="${h.op === '+' ? 'plus' : 'minus'}">${h.op}</span> ${h.val.toLocaleString("id-ID")}</div>`
+        )
         .join("");
-      localStorage.setItem("calcState", JSON.stringify({ total, current, currentStack, history }));
+      localStorage.setItem("calcState", JSON.stringify({ total, current, currentStack, history, currentOp }));
     }
 
     function addValue(val) {
@@ -138,18 +143,24 @@
     }
 
     function setAdd() {
-      total += current;
-      history.push({ op: "+", val: current });
-      current = 0;
-      currentStack = [];
+      if (current > 0) {
+        total += current;
+        history.push({ op: "+", val: current });
+        current = 0;
+        currentStack = [];
+      }
+      currentOp = "+";
       updateDisplay();
     }
 
     function setMinus() {
-      total -= current;
-      history.push({ op: "-", val: current });
-      current = 0;
-      currentStack = [];
+      if (current > 0) {
+        total -= current;
+        history.push({ op: "-", val: current });
+        current = 0;
+        currentStack = [];
+      }
+      currentOp = "-";
       updateDisplay();
     }
 
@@ -166,6 +177,7 @@
       current = 0;
       currentStack = [];
       history = [];
+      currentOp = "";
       updateDisplay();
     }
 
@@ -177,6 +189,7 @@
       current = state.current;
       currentStack = state.currentStack;
       history = state.history;
+      currentOp = state.currentOp || "";
       updateDisplay();
     } else {
       updateDisplay();
