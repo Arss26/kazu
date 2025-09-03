@@ -3,206 +3,184 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kalkulator Uang</title>
+  <title>Kalkulator Pecahan Uang</title>
   <style>
     body {
-      background: #111;
-      color: #0ff;
+      background: #0d0d0d;
+      color: #fff;
       font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 20px;
     }
-
-    #total {
-      font-size: 2.5em;
-      margin-bottom: 10px;
+    .display {
+      width: 100%;
+      max-width: 400px;
+      background: #111;
       padding: 15px;
+      margin-bottom: 10px;
       border-radius: 10px;
-      background: #222;
+      text-align: right;
+      font-size: 24px;
+      box-shadow: 0 0 10px #0ff;
     }
-
-    #current {
-      font-size: 1.5em;
-      margin-bottom: 20px;
+    .sub-display {
+      font-size: 18px;
+      color: #0ff;
+      margin-top: 5px;
+    }
+    .history {
+      width: 100%;
+      max-width: 400px;
+      background: #111;
+      min-height: 80px;
+      margin: 10px 0;
       padding: 10px;
       border-radius: 10px;
-      background: #333;
-      color: #0ff;
+      font-size: 14px;
+      overflow-y: auto;
+      box-shadow: 0 0 10px #555;
     }
-
-    .grid {
+    .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 20px;
-    }
-
-    button {
-      padding: 20px;
-      font-size: 1.2em;
-      border: none;
-      border-radius: 12px;
-      background: #00faff;
-      color: black;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 0 15px #00faff;
-      transition: 0.2s;
-    }
-
-    button:hover {
-      background: #00ffff;
-      transform: scale(1.05);
-    }
-
-    .reset {
-      background: #ff0044;
-      color: white;
-      box-shadow: 0 0 15px #ff0044;
-      padding: 20px;
+      gap: 10px;
       width: 100%;
-      margin-top: 20px;
+      max-width: 400px;
+    }
+    button {
+      font-size: 20px;
+      padding: 20px;
       border-radius: 12px;
-      font-size: 1.2em;
-      font-weight: bold;
+      border: none;
       cursor: pointer;
+      background: #222;
+      color: white;
+      box-shadow: 0 0 10px #0ff;
       transition: 0.2s;
     }
-
-    .reset:hover {
-      background: #ff335f;
+    button:hover {
       transform: scale(1.05);
     }
-
-    #history {
-      margin-top: 20px;
-      text-align: left;
-      background: #222;
-      padding: 10px;
-      border-radius: 10px;
-      max-height: 150px;
-      overflow-y: auto;
-      font-size: 1em;
+    .btn-plus {
+      background: #00ff88;
+      color: black;
+      box-shadow: 0 0 15px #00ff88, 0 0 30px #00ff88;
+    }
+    .btn-minus {
+      background: #ff4444;
+      color: white;
+      box-shadow: 0 0 15px #ff4444, 0 0 30px #ff4444;
+    }
+    .btn-reset {
+      background: #ff0000;
+      color: white;
+      width: 100%;
+      max-width: 400px;
+      margin: 10px 0;
+      padding: 20px;
+      font-size: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000;
     }
   </style>
 </head>
 <body>
   <h1>💸 ANVAR 🇮🇩</h1>
-  <div id="total">0</div>
-  <div id="current">0</div>
+  <div class="display" id="total">0</div>
+  <div class="display sub-display" id="current">0</div>
 
-  <div class="grid">
-    <!-- Baris 1 -->
+
+  <div class="buttons">
     <button onclick="addValue(100000)">100k</button>
     <button onclick="addValue(50000)">50k</button>
     <button onclick="addValue(20000)">20k</button>
+    <button onclick="undo()">⟲</button>
 
-    <!-- Baris 2 -->
     <button onclick="addValue(10000)">10k</button>
     <button onclick="addValue(5000)">5k</button>
     <button onclick="addValue(2000)">2k</button>
-    
-    <!-- Baris 3 -->
+    <button onclick="setAdd()" class="btn-plus">+</button>
+
     <button onclick="addValue(1000)">1k</button>
     <button onclick="addValue(500)">500</button>
     <button onclick="addValue(100)">100</button>
-   
-    
-    <!-- Baris 4 -->
-    <button onclick="undo()">⟲</button>
-    <button onclick="setSubtract()">-</button>
-    <button onclick="setAdd()">+</button>
-    
-    
+    <button onclick="setMinus()" class="btn-minus">-</button>
+  </div>
+  <div class="history" id="history"></div>
+  <button class="btn-reset" onclick="resetCalc()">Reset</button>
   </div>
 
-  <div id="history"></div>
-
-  <!-- Tombol Reset dipindah ke bawah history -->
-  <button class="reset" onclick="resetCalc()">RESET</button>
-
   <script>
-  let total = 0;
-  let current = 0;
-  let currentStack = []; // simpan pecahan yang ditekan sebelum commit
-  let history = [];
+    let total = 0;
+    let current = 0;
+    let currentStack = [];
+    let history = [];
 
-  const totalEl = document.getElementById("total");
-  const currentEl = document.getElementById("current");
-  const historyEl = document.getElementById("history");
+    const totalEl = document.getElementById("total");
+    const currentEl = document.getElementById("current");
+    const historyEl = document.getElementById("history");
 
-  function saveState() {
-    localStorage.setItem("calcTotal", total);
-    localStorage.setItem("calcCurrent", current);
-    localStorage.setItem("calcStack", JSON.stringify(currentStack));
-    localStorage.setItem("calcHistory", JSON.stringify(history));
-  }
+    function updateDisplay() {
+      totalEl.textContent = total.toLocaleString("id-ID");
+      currentEl.textContent = current.toLocaleString("id-ID");
+      historyEl.innerHTML = history
+        .map((h, i) => `<div>${i + 1}. ${h.op} ${h.val.toLocaleString("id-ID")}</div>`)
+        .join("");
+      localStorage.setItem("calcState", JSON.stringify({ total, current, currentStack, history }));
+    }
 
-  function loadState() {
-    total = parseInt(localStorage.getItem("calcTotal")) || 0;
-    current = parseInt(localStorage.getItem("calcCurrent")) || 0;
-    currentStack = JSON.parse(localStorage.getItem("calcStack")) || [];
-    history = JSON.parse(localStorage.getItem("calcHistory")) || [];
-    updateDisplay();
-  }
+    function addValue(val) {
+      current += val;
+      currentStack.push(val);
+      updateDisplay();
+    }
 
-  function updateDisplay() {
-    totalEl.textContent = total.toLocaleString("id-ID");
-    currentEl.textContent = current.toLocaleString("id-ID");
-    historyEl.innerHTML = history
-      .map(h => `<div>${h.op} ${h.val.toLocaleString("id-ID")}</div>`)
-      .join("");
-    saveState();
-  }
-
-  function addValue(val) {
-    current += val;
-    currentStack.push(val); // simpan pecahan yang baru ditekan
-    updateDisplay();
-  }
-
-  function setAdd() {
-    if (current > 0) {
+    function setAdd() {
       total += current;
       history.push({ op: "+", val: current });
       current = 0;
-      currentStack = []; // clear stack
+      currentStack = [];
       updateDisplay();
     }
-  }
 
-  function setSubtract() {
-    if (current > 0) {
+    function setMinus() {
       total -= current;
       history.push({ op: "-", val: current });
       current = 0;
-      currentStack = []; // clear stack
+      currentStack = [];
       updateDisplay();
     }
-  }
 
-  function undo() {
-    if (currentStack.length > 0) {
-      // undo pecahan terakhir sebelum commit
-      let lastVal = currentStack.pop();
-      current -= lastVal;
-    } else if (history.length > 0) {
-      // undo transaksi terakhir di history
-      let last = history.pop();
-      if (last.op === "+") total -= last.val;
-      if (last.op === "-") total += last.val;
+    function undo() {
+      if (currentStack.length > 0) {
+        let lastVal = currentStack.pop();
+        current -= lastVal;
+        updateDisplay();
+      }
     }
-    updateDisplay();
-  }
 
-  function resetCalc() {
-    total = 0;
-    current = 0;
-    currentStack = [];
-    history = [];
-    updateDisplay();
-  }
+    function resetCalc() {
+      total = 0;
+      current = 0;
+      currentStack = [];
+      history = [];
+      updateDisplay();
+    }
 
-  loadState();
-</script>
+    // load state kalau ada
+    const saved = localStorage.getItem("calcState");
+    if (saved) {
+      const state = JSON.parse(saved);
+      total = state.total;
+      current = state.current;
+      currentStack = state.currentStack;
+      history = state.history;
+      updateDisplay();
+    } else {
+      updateDisplay();
+    }
+  </script>
+</body>
+</html>
